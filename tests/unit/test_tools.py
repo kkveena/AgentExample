@@ -5,11 +5,11 @@ from settlement_agent.domain.models import (
     SettlementToolInput,
     TradeNettingToolInput,
 )
-from settlement_agent.tools.position_tool import call_position_tool
-from settlement_agent.tools.reference_data_tool import call_reference_data_tool
-from settlement_agent.tools.registry import REGISTRY, available_tools
-from settlement_agent.tools.settlement_tool import call_settlement_tool
-from settlement_agent.tools.trade_netting_tool import call_trade_netting_tool
+from settlement_agent.domain.tools.position_tool import call_position_tool
+from settlement_agent.domain.tools.reference_data_tool import call_reference_data_tool
+from settlement_agent.domain.tools.registry import REGISTRY, available_tools
+from settlement_agent.domain.tools.settlement_tool import call_settlement_tool
+from settlement_agent.domain.tools.trade_netting_tool import call_trade_netting_tool
 
 
 def test_position_tool_returns_firm_short_record():

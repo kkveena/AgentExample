@@ -1,5 +1,5 @@
 """Smoke tests for CSV loading and data_dictionary consistency."""
-from settlement_agent.infrastructure import csv_loader
+from settlement_agent.infrastructure.db import csv_loader
 
 
 def test_positions_load():

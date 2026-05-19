@@ -16,7 +16,7 @@ test-cov:
 	PYTHONPATH=src $(PYTHON) -m pytest tests --cov=settlement_agent --cov-report=term-missing
 
 eval:
-	PYTHONPATH=src $(PYTHON) -m settlement_agent.application.eval_runner
+	PYTHONPATH=src $(PYTHON) -m settlement_agent.application.evaluation_service.eval_runner
 
 notebook:
 	PYTHONPATH=src $(PYTHON) -m jupyter notebook notebook/phase1_firm_short_reference_workflow.ipynb

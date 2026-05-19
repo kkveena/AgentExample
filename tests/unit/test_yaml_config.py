@@ -1,5 +1,5 @@
 """YAML configuration validation tests."""
-from settlement_agent.utils import yaml_loader
+from settlement_agent.infrastructure import config_loader as yaml_loader
 
 
 def test_all_required_configs_present_and_valid():
