@@ -1,0 +1,6 @@
+file,description,intended_tool,phase,notes
+position_data.csv,Position Tool sample data: free vs pledged/segregated/on-loan inventory and delivery obligations.,position_tool,Phase 1 Development Plane seed data,Sample synthetic data only; no named enterprise source systems.
+settlement_data.csv,"Settlement Tool sample data: delivery/receive instructions, match status, settlement status, pending quantity, counterparty status.",settlement_tool,Phase 1 Development Plane seed data,Sample synthetic data only; no named enterprise source systems.
+reference_data.csv,"Reference Data Tool sample data: security/account/counterparty settlement attributes, deliberately generic and non-production.",reference_data_tool,Phase 1 Development Plane seed data,Sample synthetic data only; no named enterprise source systems.
+trade_netting_data.csv,"Trade/Netting Tool sample data: gross vs netted quantities, economics flags, netting status.",trade_netting_tool,Phase 1 Development Plane seed data,Sample synthetic data only; no named enterprise source systems.
+scenario_manifest.csv,Scenario and expected reason/action mapping for first smoke tests and eval scaffolding; QMA Draft Tool is deferred.,scenario_manifest.csv,Phase 1 Development Plane seed data,Sample synthetic data only; no named enterprise source systems.
