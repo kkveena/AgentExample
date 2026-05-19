@@ -1,0 +1,98 @@
+version: 1
+# Phase 1: each tool is a Python function over a CSV file.
+# Phase 2: each tool will be exposed as a REST endpoint and registered
+# through an MCP server. The input/output schemas below are the contract.
+tools:
+  - name: position_tool
+    description: Returns position evidence (free, pledged, segregated, on-loan).
+    phase1_backend: csv:data/position_data.csv
+    future_backend: mcp/rest
+    inputs:
+      account_id: { type: string, required: true }
+      security_id: { type: string, required: false }
+      cusip: { type: string, required: false }
+      isin: { type: string, required: false }
+      settlement_date: { type: string, required: false }
+      settlement_location: { type: string, required: false }
+    outputs:
+      records:
+        - position_evidence_id
+        - free_position_qty
+        - pledged_qty
+        - segregated_qty
+        - total_position_qty
+        - pending_receive_qty
+        - pending_delivery_qty
+        - free_short_qty
+        - inventory_status
+        - snapshot_ts
+        - confidence_score
+
+  - name: settlement_tool
+    description: Returns settlement instruction state and match/settle status.
+    phase1_backend: csv:data/settlement_data.csv
+    future_backend: mcp/rest
+    inputs:
+      instruction_id: { type: string, required: false }
+      account_id: { type: string, required: false }
+      security_id: { type: string, required: false }
+      settlement_date: { type: string, required: false }
+    outputs:
+      records:
+        - settlement_evidence_id
+        - instruction_id
+        - direction
+        - instruction_qty
+        - settled_qty
+        - pending_qty
+        - match_status
+        - settlement_status
+        - delivery_obligation_confirmed
+        - counterparty_status
+        - incoming_receive_linked
+        - reject_code
+        - fail_reason_hint
+        - last_status_ts
+
+  - name: reference_data_tool
+    description: Returns reference data for security, account, and counterparty.
+    phase1_backend: csv:data/reference_data.csv
+    future_backend: mcp/rest
+    inputs:
+      security_id: { type: string, required: false }
+      cusip: { type: string, required: false }
+      isin: { type: string, required: false }
+      account_id: { type: string, required: false }
+      counterparty_id: { type: string, required: false }
+    outputs:
+      records:
+        - security_description
+        - asset_class
+        - market
+        - settlement_cycle
+        - default_settlement_location
+        - eligible_for_delivery
+        - account_type
+        - counterparty_name
+        - counterparty_type
+
+  - name: trade_netting_tool
+    description: Returns gross vs netted trade quantities and netting flags.
+    phase1_backend: csv:data/trade_netting_data.csv
+    future_backend: mcp/rest
+    inputs:
+      account_id: { type: string, required: false }
+      security_id: { type: string, required: false }
+      counterparty_id: { type: string, required: false }
+      settlement_date: { type: string, required: false }
+    outputs:
+      records:
+        - trade_evidence_id
+        - trade_id
+        - gross_trade_qty
+        - netted_instruction_qty
+        - counterparty_nets_flag
+        - gross_vs_net_mismatch_flag
+        - netting_method
+        - include_in_obligation
+        - business_rule_tag

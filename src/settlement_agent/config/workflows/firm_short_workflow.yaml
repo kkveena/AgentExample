@@ -1,0 +1,43 @@
+workflow_id: firm_short_workflow
+workflow_version: "1.0.0"
+use_case_id: UC-01-FIRM-SHORT
+runtime: google_adk
+description: >
+  Sequential workflow for the firm-short use case. Each step writes its
+  output into session state so downstream agents can consume it.
+steps:
+  - id: intake
+    agent: intake_agent
+    writes: classification
+
+  - id: evidence
+    agent: evidence_agent
+    reads: [classification]
+    writes: evidence_bundle
+
+  - id: diagnosis
+    agent: diagnosis_agent
+    reads: [evidence_bundle]
+    writes: diagnosis
+
+  - id: commentary
+    agent: commentary_agent
+    reads: [evidence_bundle, diagnosis]
+    writes: draft_commentary
+
+  - id: policy_hitl
+    agent: policy_hitl_agent
+    reads: [draft_commentary, evidence_bundle, diagnosis]
+    writes: [policy_result, approval_decision]
+
+session_state_schema:
+  - run_id
+  - use_case_id
+  - workflow_version
+  - instruction_id
+  - classification
+  - evidence_bundle
+  - diagnosis
+  - draft_commentary
+  - policy_result
+  - approval_decision

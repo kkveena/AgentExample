@@ -118,7 +118,9 @@ data/
 - how to use `data_dictionary.csv`
 - how CSV tools will later become REST/MCP-backed tools
 
-## 7. Suggested Repository Structure
+## 7. Repository Structure
+
+The Phase 1 package is named `settlement_agent`.
 
 ```text
 .github/
@@ -132,39 +134,33 @@ data/
   reference_data.csv
   trade_netting_data.csv
   scenario_manifest.csv
-src/<package_name>/
+src/settlement_agent/
   config/
-    use_cases/
-    agents/
-    workflows/
-    prompts/
-    tools/
-    policies/
-    evals/
-  domain/
-  prompts/
-  tools/
-  utils/
-  application/
-  infrastructure/
-  llm_providers/
-  mcp_clients/
-  monitoring/
+    use_cases/      # use case YAML (UC-01-FIRM-SHORT)
+    agents/         # agent definitions
+    workflows/      # firm_short_workflow.yaml
+    prompts/        # prompt registry
+    tools/          # tool input/output schemas
+    policies/       # policy.yaml (HITL gates)
+    evals/          # eval_cases.yaml
+  domain/           # Pydantic models for tool I/O, evidence, session state
+  tools/            # CSV-backed tool wrappers + registry
+  application/      # deterministic agents, workflow runner, eval runner
+  infrastructure/   # CSV loader
+  utils/            # YAML loader
+  prompts/ llm_providers/ mcp_clients/ monitoring/ # placeholders for Phase 2+
 tests/
   unit/
   integration/
   agent/
 Makefile
-Dockerfile
-docker-compose.yml
 pyproject.toml
 README.md
-AGENTS.md
+agents.md
+SKILLS.md
 sessions.md
 experience.md
 ```
-
-If the repository already has a structure, adapt to it instead of replacing it.
 
 ## 8. YAML-First Development Plane
 
@@ -361,7 +357,72 @@ Phase 1 is complete when:
 - pytest suite passes
 - notebook runs end-to-end
 
-## 17. Known Limitations in Phase 1
+## 17. Install / Run
+
+### Install
+
+```bash
+pip install -e ".[dev]"
+```
+
+This installs `settlement_agent` plus pytest and Jupyter for the notebook.
+
+### Run tests
+
+```bash
+pytest
+# or
+make test
+```
+
+### Run evals
+
+```bash
+make eval
+# or
+python -m settlement_agent.application.eval_runner
+```
+
+### Run the notebook
+
+```bash
+make notebook
+# or
+jupyter notebook notebook/phase1_firm_short_reference_workflow.ipynb
+```
+
+### Quick end-to-end Python entry point
+
+```python
+from settlement_agent.application.workflow import run_workflow
+
+state = run_workflow("SI-DLV-1001", approval_status="approved", reviewer="ops_user")
+print(state.classification.scenario_label)   # firm_short
+print(state.diagnosis.reason_code)           # FIRM_SHORT_FREE_INVENTORY
+print(state.commentary.text)
+print(state.is_final())                      # True
+```
+
+## 18. How the pieces fit
+
+- **YAML configs** under `src/settlement_agent/config/` declare the use
+  case, agents, workflow, prompts, tool I/O contracts, policy gates, and
+  evals. They are the Development Plane.
+- **CSV-backed tools** under `src/settlement_agent/tools/` read from
+  files in `data/`. The tool contract is intentionally identical to
+  what a future REST/MCP tool will expose.
+- **Agents** in `src/settlement_agent/application/agents.py` implement
+  the Intake → Evidence → Diagnosis → Commentary → Policy/HITL chain
+  deterministically so the workflow runs without an LLM call.
+- **Workflow runner** in `src/settlement_agent/application/workflow.py`
+  uses Google ADK when available and otherwise runs the local fallback.
+  Either path produces the same `SessionState` object.
+- **Session memory** is documented in `sessions.md`.
+- **Eval runner** validates scenario classification, reason code, tool
+  coverage, evidence fields, commentary constraints, no auto-QMA send,
+  and human approval requirement.
+
+## 19. Known Limitations in Phase 1
 
 - Uses mock CSV data instead of live systems
 - Does not implement MCP server/client plane
@@ -370,7 +431,7 @@ Phase 1 is complete when:
 - Does not send QMA messages
 - Does not implement production security, entitlements, or audit dashboards
 
-## 18. Recommended Phase 2 Direction
+## 20. Recommended Phase 2 Direction
 
 - Convert tools to REST-backed adapters
 - Register tools through MCP

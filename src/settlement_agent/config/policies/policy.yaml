@@ -1,0 +1,29 @@
+version: 1
+policy_id: phase1_default
+description: Lightweight policy gates for the Phase 1 reference workflow.
+
+constraints:
+  - id: no_auto_qma_send
+    description: QMA send is human-controlled in Phase 1. Reject any auto-send attempt.
+    severity: hard
+
+  - id: evidence_grounding_required
+    description: Every numeric or status claim must reference retrieved evidence.
+    severity: hard
+
+  - id: no_internal_system_names
+    description: Do not reference internal source-system names in commentary.
+    severity: hard
+
+  - id: prefer_insufficient_evidence
+    description: When facts are missing, output "insufficient evidence" instead of speculation.
+    severity: hard
+
+  - id: require_human_approval
+    description: Commentary cannot be marked final without human approval.
+    severity: hard
+
+approval:
+  required: true
+  allowed_states: [approved, rejected, needs_edit]
+  default_state: pending
