@@ -137,15 +137,23 @@ data/
 src/settlement_agent/
   config/
     use_cases/      # use case YAML (UC-01-FIRM-SHORT)
-    agents/         # agent definitions
+    agents/         # agent YAML definitions
     workflows/      # firm_short_workflow.yaml
     prompts/        # prompt registry
     tools/          # tool input/output schemas
     policies/       # policy.yaml (HITL gates)
     evals/          # eval_cases.yaml
+  agents/           # ADK-style root + sub-agent tree
+    root_agent.py
+    sub_agents/
+      intake_agent.py
+      evidence_agent.py
+      diagnosis_agent.py
+      commentary_agent.py
+      policy_hitl_agent.py
   domain/           # Pydantic models for tool I/O, evidence, session state
   tools/            # CSV-backed tool wrappers + registry
-  application/      # deterministic agents, workflow runner, eval runner
+  application/      # workflow entry point, eval runner
   infrastructure/   # CSV loader
   utils/            # YAML loader
   prompts/ llm_providers/ mcp_clients/ monitoring/ # placeholders for Phase 2+
@@ -411,12 +419,15 @@ print(state.is_final())                      # True
 - **CSV-backed tools** under `src/settlement_agent/tools/` read from
   files in `data/`. The tool contract is intentionally identical to
   what a future REST/MCP tool will expose.
-- **Agents** in `src/settlement_agent/application/agents.py` implement
-  the Intake → Evidence → Diagnosis → Commentary → Policy/HITL chain
-  deterministically so the workflow runs without an LLM call.
+- **Agent tree** under `src/settlement_agent/agents/` follows the ADK
+  root + sub-agent shape. `root_agent.py` orchestrates the
+  Intake → Evidence → Diagnosis → Commentary → Policy/HITL chain;
+  each sub-agent module exposes a deterministic `run(...)` (Phase 1)
+  plus a `build_adk_agent()` factory for Phase 2 wire-up into an ADK
+  `SequentialAgent`.
 - **Workflow runner** in `src/settlement_agent/application/workflow.py`
-  uses Google ADK when available and otherwise runs the local fallback.
-  Either path produces the same `SessionState` object.
+  is a thin entry point that calls the root agent and mirrors session
+  state into an ADK `InMemorySessionService` when ADK is installed.
 - **Session memory** is documented in `sessions.md`.
 - **Eval runner** validates scenario classification, reason code, tool
   coverage, evidence fields, commentary constraints, no auto-QMA send,

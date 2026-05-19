@@ -51,9 +51,17 @@ data/
   scenario_manifest.csv
 src/settlement_agent/
   config/{use_cases,agents,workflows,prompts,tools,policies,evals}/*.yaml
+  agents/                  # ADK-style root + sub-agent enclosure
+    root_agent.py          # orchestrator (Phase 2: ADK SequentialAgent)
+    sub_agents/
+      intake_agent.py
+      evidence_agent.py
+      diagnosis_agent.py
+      commentary_agent.py
+      policy_hitl_agent.py
   domain/        # Pydantic models (tool I/O, evidence, session state)
   tools/         # CSV-backed tools + registry
-  application/   # agents, workflow runner, eval runner
+  application/   # workflow entry point, eval runner
   infrastructure/# CSV loader
   utils/         # YAML loader
   llm_providers/ mcp_clients/ monitoring/ prompts/  # placeholders
