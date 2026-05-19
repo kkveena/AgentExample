@@ -1,0 +1,453 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2868
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 You are helping me develop Phase 1 of my Google ADK-based agentic settlement commentary reference implementation.\
+\
+Repository context:\
+The repo already exists and currently contains:\
+\
+- data/\
+- docs/\
+- .gitignore\
+- README.md\
+- agents.md\
+\
+Please do NOT overwrite the existing README.md or agents.md blindly. First read them, understand the intended architecture, and update them only where needed.\
+\
+Primary use case:\
+\'93Firm is short on free inventory for delivery.\'94\
+\
+Business context:\
+In settlement operations, when the firm is short on free inventory for a delivery obligation on T+1 / T+2, operations analysts manually collect information from position, settlement, reference data, and trade/netting systems. They then prepare factual commentary for QMA, the operations email system used by humans to interact with counterparties.\
+\
+Phase 1 objective:\
+Build a reference implementation that uses Google ADK runtime to semi-automate evidence gathering, diagnosis, and draft commentary recommendation, while keeping human-in-the-loop approval.\
+\
+Important Phase 1 scope:\
+1. Development Plane first.\
+2. Pure YAML files and properties for defining use case, agents, prompts, workflow, tools, policy, and evals.\
+3. Google ADK as the runtime.\
+4. CSV-backed mock tools for Phase 1.\
+5. data/ directory is the source for all synthetic sample data.\
+6. Read data/data_dictionary.csv carefully and treat it as the authoritative field reference.\
+7. QMA Draft Tool is deferred. Do NOT build actual QMA send or draft integration in Phase 1.\
+8. MCP Plane is deferred. However, design tools so they can later be exposed through MCP and backed by REST APIs.\
+9. RAG / pgvector memory is deferred.\
+10. Phase 1 memory is session memory only.\
+11. Create sessions.md to document session-memory behavior.\
+12. Create experience.md as temporary case memory. Later this will move to a key-value store.\
+13. Control Plane in Phase 1 should include lightweight human-in-the-loop review/approval.\
+14. Add tests, evals, and a Jupyter notebook.\
+15. Add SKILLS.md for future Claude Code / Codex contributors.\
+\
+Target project structure:\
+If the repo does not already have this structure, create it incrementally and cleanly:\
+\
+.github/\
+notebook/\
+data/\
+docs/\
+src/<package_name>/\
+  config/\
+    use_cases/\
+    agents/\
+    workflows/\
+    prompts/\
+    tools/\
+    policies/\
+    evals/\
+  domain/\
+  prompts/\
+  tools/\
+  utils/\
+  application/\
+  infrastructure/\
+  llm_providers/\
+  mcp_clients/\
+  monitoring/\
+tests/\
+  unit/\
+  integration/\
+  agent/\
+README.md\
+agents.md\
+SKILLS.md\
+sessions.md\
+experience.md\
+Makefile\
+pyproject.toml\
+\
+Use a clean Python package name such as:\
+\
+settlement_agent\
+\
+or another simple package name consistent with the repo.\
+\
+Core implementation requirements:\
+\
+A. Read existing documentation first\
+\
+Before coding:\
+1. Read README.md.\
+2. Read agents.md.\
+3. Read files under docs/.\
+4. Read data/README.md if present.\
+5. Read data/data_dictionary.csv.\
+\
+Then summarize internally what exists and only add missing pieces.\
+\
+B. YAML-first Development Plane\
+\
+Create YAML configuration for:\
+\
+1. use case definition\
+2. agents\
+3. workflow\
+4. prompts\
+5. tools\
+6. policy\
+7. evals\
+\
+The Phase 1 workflow should include:\
+\
+1. Intake Agent\
+   - classify scenario\
+   - identify firm-short case\
+   - extract instruction context\
+\
+2. Evidence Agent\
+   - call Position Tool\
+   - call Settlement Tool\
+   - call Reference Data Tool\
+   - call Trade / Netting Tool\
+\
+3. Diagnosis Agent\
+   - compare delivery obligation vs free inventory\
+   - identify pledged / segregated / unavailable inventory\
+   - check if incoming receives may cover shortfall\
+   - determine reason code and recommended action\
+\
+4. Commentary Agent\
+   - generate factual draft commentary\
+   - every statement must be tied to evidence\
+   - no speculation\
+   - no named internal system references\
+\
+5. Policy / HITL Agent\
+   - validate evidence grounding\
+   - check no unsupported numbers or statuses\
+   - check human approval is required\
+   - simulate approval / rejection / needs-edit\
+\
+C. CSV-backed tools\
+\
+Implement Python wrappers over CSV files for:\
+\
+1. Position Tool\
+2. Settlement Tool\
+3. Reference Data Tool\
+4. Trade / Netting Tool\
+\
+Important:\
+- Use Pydantic models for tool inputs and outputs.\
+- Use typed, deterministic Python functions.\
+- Use data/data_dictionary.csv as field reference.\
+- Keep tool names generic.\
+- Do not expose internal enterprise system names.\
+- Add comments showing these CSV-backed tools will later become REST/MCP-backed tools.\
+- Do not build QMA Draft Tool yet.\
+\
+Expected tool behavior:\
+\
+Position Tool:\
+Input:\
+- account_id\
+- security_id / cusip / isin\
+- settlement_date\
+- location if available\
+\
+Output:\
+- free_qty\
+- pledged_qty\
+- segregated_qty\
+- total_position_qty\
+- snapshot_timestamp\
+- confidence / source timestamp if available\
+\
+Settlement Tool:\
+Input:\
+- instruction_id\
+- account_id\
+- security_id\
+- settlement_date\
+\
+Output:\
+- delivery_quantity\
+- receive_quantity if available\
+- settlement_status\
+- matched_status\
+- pending_reason\
+- counterparty_id\
+- settlement_location\
+- last_updated_timestamp\
+\
+Reference Data Tool:\
+Input:\
+- security_id / cusip / isin\
+- account_id\
+- counterparty_id\
+\
+Output:\
+- security_description\
+- asset_class\
+- market\
+- settlement_location\
+- counterparty_name\
+- account_type\
+- eligibility_flags\
+\
+Trade / Netting Tool:\
+Input:\
+- account_id\
+- security_id\
+- counterparty_id\
+- settlement_date\
+\
+Output:\
+- gross_delivery_qty\
+- gross_receive_qty\
+- net_qty\
+- netting_indicator\
+- related_trade_ids\
+- receive_expected_flag\
+\
+D. Google ADK workflow\
+\
+Implement a Google ADK-oriented workflow.\
+\
+The workflow should support:\
+- root orchestrator agent\
+- intake sub-agent\
+- evidence sub-agent\
+- diagnosis sub-agent\
+- commentary sub-agent\
+- policy/HITL sub-agent\
+- session state passing\
+- tool results stored in session state\
+- evidence bundle stored in session state\
+- commentary draft stored in session state\
+- human approval decision stored in session state\
+\
+If Google ADK integration creates dependency or environment issues, create a fallback local runner with the same interface so tests and notebook can run. Keep the code ADK-ready.\
+\
+E. Session memory\
+\
+Create sessions.md.\
+\
+Document:\
+- what is stored in session memory\
+- how run_id is created\
+- what evidence is captured\
+- what is not persisted in Phase 1\
+- how Phase 2 will add RAG / pgvector\
+- how Phase 2 or Phase 3 may add durable run memory\
+\
+Session state should include:\
+- run_id\
+- use_case_id\
+- workflow_version\
+- input instruction_id\
+- scenario classification\
+- tool call results\
+- evidence bundle\
+- diagnosis result\
+- draft commentary\
+- policy result\
+- human approval status\
+\
+F. Temporary case memory\
+\
+Create experience.md.\
+\
+Include:\
+1. approved firm-short case example\
+2. insufficient-evidence case example\
+3. rejected-draft case example\
+4. note that this is temporary case memory and will later move to a key-value store\
+\
+G. Human-in-the-loop\
+\
+Implement a lightweight human approval step.\
+\
+For Phase 1, this can be:\
+- notebook cell approval,\
+- CLI input,\
+- or function parameter.\
+\
+Allowed approval states:\
+- approved\
+- rejected\
+- needs_edit\
+\
+The workflow must not mark commentary as final unless human approval is captured.\
+\
+H. Evals\
+\
+Create config/evals/ and/or tests/evals/.\
+\
+Add eval cases for:\
+1. firm short confirmed\
+2. incoming receive covers short\
+3. insufficient evidence\
+4. counterparty short, not firm short\
+5. netting mismatch\
+\
+Each eval case should define:\
+- scenario_id\
+- instruction_id\
+- expected reason code\
+- expected tools called\
+- expected evidence fields\
+- expected approval route\
+- expected commentary constraints\
+\
+Create an eval runner that checks:\
+- scenario classification\
+- reason code\
+- required tools called\
+- evidence bundle exists\
+- commentary does not contain unsupported numeric claims\
+- commentary references evidence\
+- QMA send is not performed automatically\
+- human approval is required\
+\
+I. Tests\
+\
+Create pytest tests.\
+\
+Required tests:\
+1. CSV data loads successfully\
+2. data_dictionary.csv exists and required fields are represented\
+3. Position Tool test\
+4. Settlement Tool test\
+5. Reference Data Tool test\
+6. Trade / Netting Tool test\
+7. YAML config validation test\
+8. workflow execution test for firm-short case\
+9. human approval test\
+10. eval runner test\
+\
+Tests should run with:\
+\
+pytest\
+\
+and ideally also:\
+\
+make test\
+\
+J. Jupyter notebook\
+\
+Create:\
+\
+notebook/phase1_firm_short_reference_workflow.ipynb\
+\
+Notebook should demonstrate:\
+1. load CSV data\
+2. load YAML config\
+3. call Position Tool\
+4. call Settlement Tool\
+5. call Reference Data Tool\
+6. call Trade / Netting Tool\
+7. run the ADK/local workflow\
+8. show evidence bundle\
+9. generate factual draft commentary\
+10. capture human approval\
+11. run evals\
+\
+The notebook should be simple enough for a manager or developer to run end-to-end.\
+\
+K. Documentation updates\
+\
+Update README.md carefully.\
+\
+README.md should include:\
+- project purpose\
+- Phase 1 scope\
+- out-of-scope items\
+- architecture\
+- repo structure\
+- how to install\
+- how to run tests\
+- how to run notebook\
+- how CSV tools map to future REST/MCP tools\
+- how session memory works\
+- how evals work\
+- how human-in-the-loop works\
+\
+Update or create data/README.md.\
+\
+data/README.md should explain:\
+- each CSV file\
+- which tool uses which CSV\
+- important join keys\
+- synthetic data assumptions\
+- data_dictionary.csv usage\
+- future REST/MCP migration path\
+\
+Create SKILLS.md.\
+\
+SKILLS.md should guide future Claude Code / Codex contributors:\
+- project objective\
+- Phase 1 scope\
+- repo structure\
+- coding principles\
+- how to add a new CSV-backed tool\
+- how to add a new YAML workflow\
+- how to add a new eval\
+- how to add notebook tests\
+- constraints:\
+  - no MCP implementation in Phase 1\
+  - no pgvector/RAG in Phase 1\
+  - no automatic QMA send in Phase 1\
+  - all commentary must be evidence-grounded\
+  - human approval required\
+  - keep system names generic\
+  - follow data_dictionary.csv\
+\
+L. Acceptance criteria\
+\
+At completion, the repo should support:\
+\
+1. install dependencies\
+2. run tests\
+3. open notebook and execute Phase 1 firm-short workflow\
+4. load sample data from CSV\
+5. create evidence bundle\
+6. diagnose \'93firm short on free inventory for delivery\'94\
+7. generate factual draft commentary\
+8. require human approval\
+9. run evals\
+10. show clear path to future MCP/REST-backed tools\
+\
+Important design principles:\
+- Do not hard-code all logic in the notebook.\
+- Business rules should be in YAML or isolated domain modules.\
+- Tool interfaces must be future-ready for MCP.\
+- Keep Phase 1 simple and working.\
+- Prefer insufficient evidence over speculation.\
+- Keep commentary factual.\
+- Keep QMA send human-controlled.\
+- Preserve current repo files unless updates are necessary.\
+\
+Please implement incrementally. After changes, provide a summary with:\
+- files created\
+- files modified\
+- tests added\
+- how to run tests\
+- how to run notebook\
+- known limitations\
+- recommended next Phase 2 steps}
