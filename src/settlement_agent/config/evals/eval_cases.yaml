@@ -1,0 +1,90 @@
+version: 1
+eval_suite_id: phase1_firm_short_suite
+description: Phase 1 eval cases for the firm-short reference workflow.
+
+cases:
+  - scenario_id: eval_firm_short_confirmed
+    case_id: UC-01-FIRM-SHORT
+    instruction_id: SI-DLV-1001
+    account_id: ACC-DLV-001
+    security_id: SEC-US-0001
+    expected:
+      scenario_label: firm_short
+      reason_code: FIRM_SHORT_FREE_INVENTORY
+      tools_called:
+        - position_tool
+        - settlement_tool
+        - reference_data_tool
+        - trade_netting_tool
+      evidence_fields_required:
+        - free_position_qty
+        - pledged_qty
+        - pending_delivery_qty
+        - delivery_obligation_confirmed
+      approval_required: true
+      commentary_constraints:
+        must_reference_evidence: true
+        no_unsupported_numbers: true
+        no_internal_system_names: true
+        auto_qma_send_forbidden: true
+
+  - scenario_id: eval_incoming_receive_covers
+    case_id: UC-01-INCOMING-COVER
+    instruction_id: SI-DLV-1005
+    account_id: ACC-DLV-004
+    security_id: SEC-US-0004
+    expected:
+      scenario_label: incoming_receive_covers
+      reason_code: SHORT_PENDING_INCOMING_RECEIVE
+      tools_called:
+        - position_tool
+        - settlement_tool
+        - reference_data_tool
+        - trade_netting_tool
+      evidence_fields_required:
+        - pending_receive_qty
+        - incoming_receive_linked
+      approval_required: true
+
+  - scenario_id: eval_insufficient_evidence
+    case_id: UC-01-COVERED
+    instruction_id: SI-DLV-1003
+    account_id: ACC-DLV-002
+    security_id: SEC-US-0002
+    expected:
+      scenario_label: insufficient_information
+      reason_code: NO_POSITION_SHORT
+      tools_called:
+        - position_tool
+        - settlement_tool
+        - reference_data_tool
+        - trade_netting_tool
+      approval_required: true
+
+  - scenario_id: eval_counterparty_short
+    case_id: UC-02-CP-SHORT
+    instruction_id: SI-REC-1008
+    account_id: ACC-REC-001
+    security_id: SEC-US-0007
+    expected:
+      scenario_label: counterparty_short
+      reason_code: COUNTERPARTY_SHORT
+      tools_called:
+        - settlement_tool
+        - reference_data_tool
+        - trade_netting_tool
+      approval_required: true
+
+  - scenario_id: eval_netting_mismatch
+    case_id: UC-05-NETTING-MISMATCH
+    instruction_id: SI-DLV-1011
+    account_id: ACC-DLV-008
+    security_id: SEC-US-0009
+    expected:
+      scenario_label: netting_mismatch
+      reason_code: NETTING_MISMATCH_GROSS_VS_NET
+      tools_called:
+        - settlement_tool
+        - reference_data_tool
+        - trade_netting_tool
+      approval_required: true

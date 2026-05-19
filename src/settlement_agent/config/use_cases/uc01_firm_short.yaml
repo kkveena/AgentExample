@@ -1,0 +1,29 @@
+use_case_id: UC-01-FIRM-SHORT
+name: Firm Short on Free Inventory for Delivery
+description: >
+  Operations analyst investigates a pending delivery obligation where the
+  firm may be short on free inventory. The workflow gathers position,
+  settlement, reference, and trade/netting evidence; diagnoses the cause;
+  drafts factual commentary; and requires human approval before any
+  external messaging.
+phase: 1
+owner: settlement_ops_reference
+runtime: google_adk
+inputs:
+  - name: instruction_id
+    required: true
+    description: Pending settlement instruction identifier
+  - name: account_id
+    required: false
+  - name: security_id
+    required: false
+outputs:
+  - evidence_bundle
+  - diagnosis
+  - draft_commentary
+  - approval_decision
+out_of_scope:
+  - automatic_qma_send
+  - mcp_server_implementation
+  - rag_pgvector_memory
+  - durable_run_state

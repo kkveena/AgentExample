@@ -1,0 +1,40 @@
+version: 1
+agents:
+  - id: intake_agent
+    role: Intake
+    description: Classify the settlement scenario and extract instruction context.
+    prompt_ref: intake_prompt
+    inputs: [instruction_id]
+    outputs: [classification]
+
+  - id: evidence_agent
+    role: Evidence
+    description: Call CSV-backed tools and assemble an evidence bundle.
+    prompt_ref: evidence_prompt
+    tools:
+      - position_tool
+      - settlement_tool
+      - reference_data_tool
+      - trade_netting_tool
+    outputs: [evidence_bundle]
+
+  - id: diagnosis_agent
+    role: Diagnosis
+    description: Apply firm-short business rules over the evidence bundle.
+    prompt_ref: diagnosis_prompt
+    inputs: [evidence_bundle]
+    outputs: [diagnosis]
+
+  - id: commentary_agent
+    role: Commentary
+    description: Draft factual commentary grounded in evidence; no speculation.
+    prompt_ref: commentary_prompt
+    inputs: [evidence_bundle, diagnosis]
+    outputs: [draft_commentary]
+
+  - id: policy_hitl_agent
+    role: Policy / HITL
+    description: Validate evidence grounding and route for human approval.
+    prompt_ref: policy_prompt
+    inputs: [draft_commentary, evidence_bundle, diagnosis]
+    outputs: [policy_result, approval_decision]

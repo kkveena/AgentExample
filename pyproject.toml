@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "settlement_agent"
+version = "0.1.0"
+description = "Phase 1 reference implementation for agentic settlement commentary (YAML-first Development Plane, Google ADK runtime, CSV-backed tools)."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Settlement Commentary Reference Team" }]
+license = { text = "Proprietary" }
+dependencies = [
+    "pydantic>=2.5",
+    "PyYAML>=6.0",
+    "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "jupyter>=1.0",
+    "ipykernel>=6.29",
+]
+adk = [
+    "google-adk>=0.1.0; python_version >= '3.10'",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"settlement_agent" = ["config/**/*.yaml", "config/**/*.yml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra -q"
