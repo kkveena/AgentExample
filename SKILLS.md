@@ -50,21 +50,23 @@ data/
   trade_netting_data.csv
   scenario_manifest.csv
 src/settlement_agent/
+  config.py
   config/{use_cases,agents,workflows,prompts,tools,policies,evals}/*.yaml
-  agents/                  # ADK-style root + sub-agent enclosure
-    root_agent.py          # orchestrator (Phase 2: ADK SequentialAgent)
-    sub_agents/
-      intake_agent.py
-      evidence_agent.py
-      diagnosis_agent.py
-      commentary_agent.py
-      policy_hitl_agent.py
-  domain/        # Pydantic models (tool I/O, evidence, session state)
-  tools/         # CSV-backed tools + registry
-  application/   # workflow entry point, eval runner
-  infrastructure/# CSV loader
-  utils/         # YAML loader
-  llm_providers/ mcp_clients/ monitoring/ prompts/  # placeholders
+  domain/
+    models.py exceptions.py utils.py
+    tools/        # CSV-backed tool contracts + registry
+    prompts/      # prompt registry
+    memory/       # session + case memory interfaces
+  application/
+    chat_service/             # ADK root + sub-agent enclosure
+      root_agent.py workflow.py
+      sub_agents/{intake,evidence,diagnosis,commentary,policy_hitl}_agent.py
+    evaluation_service/eval_runner.py
+    reset_memory_service/reset.py
+    ingest_documents_service/  # Phase 2 RAG ingest placeholder
+  infrastructure/
+    config_loader.py
+    api/ db/{csv_loader.py} llm_providers/ mcp_clients/ monitoring/
 tests/
   unit/ integration/ agent/
 README.md
@@ -95,13 +97,15 @@ pyproject.toml
 1. Add the source CSV under `data/`.
 2. Document the new file in `data/data_dictionary.csv` and `data/README.md`.
 3. Add Pydantic input/output models in `src/settlement_agent/domain/models.py`.
-4. Add a tool function in `src/settlement_agent/tools/<your_tool>.py` that:
+4. Add a tool function in `src/settlement_agent/domain/tools/<your_tool>.py` that:
    - accepts a Pydantic input,
-   - filters CSV rows via `tools/base.py`,
+   - filters CSV rows via `domain/tools/base.py`,
    - returns a `ToolCallResult`.
-5. Register the tool in `src/settlement_agent/tools/registry.py`.
+5. Register the tool in `src/settlement_agent/domain/tools/registry.py`.
 6. Add a `tools.yaml` entry under `src/settlement_agent/config/tools/`.
-7. Add a unit test in `tests/unit/test_tools.py`.
+7. If the CSV needs new loading logic, add it to
+   `src/settlement_agent/infrastructure/db/csv_loader.py`.
+8. Add a unit test in `tests/unit/test_tools.py`.
 
 ## 6. How to add a new YAML workflow
 

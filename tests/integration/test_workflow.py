@@ -1,5 +1,5 @@
 """End-to-end workflow tests."""
-from settlement_agent.application.workflow import run_workflow_local
+from settlement_agent.application.chat_service.workflow import run_workflow_local
 
 
 def test_firm_short_workflow_produces_evidence_and_diagnosis():

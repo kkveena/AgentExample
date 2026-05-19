@@ -1,5 +1,5 @@
 """Eval runner tests."""
-from settlement_agent.application.eval_runner import run_eval_suite
+from settlement_agent.application.evaluation_service.eval_runner import run_eval_suite
 
 
 def test_eval_suite_runs_and_all_pass():

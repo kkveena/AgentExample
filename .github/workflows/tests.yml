@@ -20,4 +20,4 @@ jobs:
       - name: Run tests
         run: pytest -q
       - name: Run evals
-        run: python -m settlement_agent.application.eval_runner
+        run: python -m settlement_agent.application.evaluation_service.eval_runner

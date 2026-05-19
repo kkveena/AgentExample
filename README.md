@@ -135,28 +135,43 @@ data/
   trade_netting_data.csv
   scenario_manifest.csv
 src/settlement_agent/
-  config/
-    use_cases/      # use case YAML (UC-01-FIRM-SHORT)
-    agents/         # agent YAML definitions
-    workflows/      # firm_short_workflow.yaml
-    prompts/        # prompt registry
-    tools/          # tool input/output schemas
-    policies/       # policy.yaml (HITL gates)
-    evals/          # eval_cases.yaml
-  agents/           # ADK-style root + sub-agent tree
-    root_agent.py
-    sub_agents/
-      intake_agent.py
-      evidence_agent.py
-      diagnosis_agent.py
-      commentary_agent.py
-      policy_hitl_agent.py
-  domain/           # Pydantic models for tool I/O, evidence, session state
-  tools/            # CSV-backed tool wrappers + registry
-  application/      # workflow entry point, eval runner
-  infrastructure/   # CSV loader
-  utils/            # YAML loader
-  prompts/ llm_providers/ mcp_clients/ monitoring/ # placeholders for Phase 2+
+  __init__.py
+  config.py                       # runtime config + Phase 2 feature flags
+  config/                         # YAML Development Plane
+    use_cases/ agents/ workflows/ prompts/ tools/ policies/ evals/
+  domain/                         # pure business concepts (no I/O)
+    models.py                     # Pydantic tool I/O + session state
+    exceptions.py
+    utils.py
+    tools/                        # tool contracts + CSV-backed impls
+      base.py
+      position_tool.py settlement_tool.py
+      reference_data_tool.py trade_netting_tool.py
+      registry.py
+    prompts/                      # prompt registry (YAML-backed)
+    memory/                       # session + case-memory interfaces
+      session.py case_memory.py
+  application/                    # use-case services
+    chat_service/                 # ADK-style root + sub-agent enclosure
+      root_agent.py
+      workflow.py                 # thin entry point
+      sub_agents/
+        intake_agent.py evidence_agent.py
+        diagnosis_agent.py commentary_agent.py
+        policy_hitl_agent.py
+    evaluation_service/
+      eval_runner.py
+    reset_memory_service/
+      reset.py
+    ingest_documents_service/     # Phase 2 RAG ingest placeholder
+  infrastructure/                 # adapters to the outside world
+    config_loader.py              # YAML loader
+    api/                          # FastAPI surface (Phase 2)
+    db/
+      csv_loader.py               # Phase 1 CSV reader
+    llm_providers/                # Anthropic / Vertex / OpenAI (Phase 2)
+    mcp_clients/                  # MCP server + ADK MCPToolset (Phase 2)
+    monitoring/                   # structured logging / traces (Phase 2)
 tests/
   unit/
   integration/
@@ -388,7 +403,7 @@ make test
 ```bash
 make eval
 # or
-python -m settlement_agent.application.eval_runner
+python -m settlement_agent.application.evaluation_service.eval_runner
 ```
 
 ### Run the notebook
@@ -402,7 +417,7 @@ jupyter notebook notebook/phase1_firm_short_reference_workflow.ipynb
 ### Quick end-to-end Python entry point
 
 ```python
-from settlement_agent.application.workflow import run_workflow
+from settlement_agent.application.chat_service.workflow import run_workflow
 
 state = run_workflow("SI-DLV-1001", approval_status="approved", reviewer="ops_user")
 print(state.classification.scenario_label)   # firm_short
@@ -416,17 +431,20 @@ print(state.is_final())                      # True
 - **YAML configs** under `src/settlement_agent/config/` declare the use
   case, agents, workflow, prompts, tool I/O contracts, policy gates, and
   evals. They are the Development Plane.
-- **CSV-backed tools** under `src/settlement_agent/tools/` read from
-  files in `data/`. The tool contract is intentionally identical to
-  what a future REST/MCP tool will expose.
-- **Agent tree** under `src/settlement_agent/agents/` follows the ADK
+- **CSV-backed tools** under `src/settlement_agent/domain/tools/`
+  declare the Phase 1 contract and call into
+  `infrastructure/db/csv_loader.py`. The contract is identical to
+  what the future REST/MCP tool will expose.
+- **Agent tree** lives under
+  `src/settlement_agent/application/chat_service/` and follows the ADK
   root + sub-agent shape. `root_agent.py` orchestrates the
   Intake → Evidence → Diagnosis → Commentary → Policy/HITL chain;
   each sub-agent module exposes a deterministic `run(...)` (Phase 1)
   plus a `build_adk_agent()` factory for Phase 2 wire-up into an ADK
   `SequentialAgent`.
-- **Workflow runner** in `src/settlement_agent/application/workflow.py`
-  is a thin entry point that calls the root agent and mirrors session
+- **Workflow runner** in
+  `src/settlement_agent/application/chat_service/workflow.py` is a
+  thin entry point that calls the root agent and mirrors session
   state into an ADK `InMemorySessionService` when ADK is installed.
 - **Session memory** is documented in `sessions.md`.
 - **Eval runner** validates scenario classification, reason code, tool
