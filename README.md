@@ -152,13 +152,14 @@ src/settlement_agent/
     memory/                       # session + case-memory interfaces
       session.py case_memory.py
   application/                    # use-case services
-    chat_service/                 # ADK-style root + sub-agent enclosure
+    agents/                       # ADK-style agentic engine
       root_agent.py
-      workflow.py                 # thin entry point
       sub_agents/
         intake_agent.py evidence_agent.py
         diagnosis_agent.py commentary_agent.py
         policy_hitl_agent.py
+    chat_service/                 # chat-turn entry point
+      workflow.py
     evaluation_service/
       eval_runner.py
     reset_memory_service/
@@ -435,17 +436,18 @@ print(state.is_final())                      # True
   declare the Phase 1 contract and call into
   `infrastructure/db/csv_loader.py`. The contract is identical to
   what the future REST/MCP tool will expose.
-- **Agent tree** lives under
-  `src/settlement_agent/application/chat_service/` and follows the ADK
-  root + sub-agent shape. `root_agent.py` orchestrates the
-  Intake → Evidence → Diagnosis → Commentary → Policy/HITL chain;
-  each sub-agent module exposes a deterministic `run(...)` (Phase 1)
-  plus a `build_adk_agent()` factory for Phase 2 wire-up into an ADK
-  `SequentialAgent`.
-- **Workflow runner** in
-  `src/settlement_agent/application/chat_service/workflow.py` is a
-  thin entry point that calls the root agent and mirrors session
-  state into an ADK `InMemorySessionService` when ADK is installed.
+- **Agent tree** lives under `src/settlement_agent/application/agents/`
+  and follows the ADK root + sub-agent shape. `root_agent.py`
+  orchestrates the Intake → Evidence → Diagnosis → Commentary →
+  Policy/HITL chain; each sub-agent module exposes a deterministic
+  `run(...)` (Phase 1) plus a `build_adk_agent()` factory for Phase 2
+  wire-up into an ADK `SequentialAgent`. Any service can call into the
+  agents directly without going through `chat_service`.
+- **Chat-turn entry point** in
+  `src/settlement_agent/application/chat_service/workflow.py` is the
+  chat-interaction surface: it accepts an instruction (and optional
+  approval inputs), invokes the agents, and mirrors session state
+  into an ADK `InMemorySessionService` when ADK is installed.
 - **Session memory** is documented in `sessions.md`.
 - **Eval runner** validates scenario classification, reason code, tool
   coverage, evidence fields, commentary constraints, no auto-QMA send,

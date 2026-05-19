@@ -1,15 +1,21 @@
-"""Workflow entry point.
+"""Chat-turn entry point.
 
-Thin wrapper around the root agent. Tries to mirror the run into a
-Google ADK session when ADK is installed; otherwise stays on the local
-deterministic root agent. Either path produces the same ``SessionState``.
+A chat turn takes one instruction (and optional human approval inputs)
+and runs it through the agentic engine in
+:mod:`settlement_agent.application.agents`. The agents own the
+workflow; this module owns the chat-interaction surface.
+
+When Google ADK is installed the resulting ``SessionState`` is mirrored
+into an ADK ``InMemorySessionService`` for inspection; otherwise the
+deterministic root agent is used directly. Either path produces the
+same ``SessionState`` shape.
 """
 from __future__ import annotations
 
 from typing import Optional
 
 from ...domain.models import SessionState
-from .root_agent import run as run_root_agent
+from ..agents.root_agent import run as run_root_agent
 
 
 def adk_available() -> bool:

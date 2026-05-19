@@ -1,13 +1,11 @@
-"""Chat service: the firm-short root agent and its sub-agents.
+"""Chat service.
 
-This is the ADK-style enclosure for the workflow:
+The chat-interaction surface for the firm-short workflow. A chat turn is
+a single instruction request that flows through the agentic engine in
+:mod:`settlement_agent.application.agents` and returns a ``SessionState``.
 
-    root_agent (SequentialAgent in Phase 2)
-      |- intake_agent
-      |- evidence_agent
-      |- diagnosis_agent
-      |- commentary_agent
-      |- policy_hitl_agent
+Phase 1 exposes a single entry point (``run_workflow``); Phase 2 may grow
+this into a multi-turn conversation handler, slot-filling for missing
+fields, and follow-up prompts.
 """
-from .root_agent import build_root_agent, run as run_root  # noqa: F401
 from .workflow import adk_available, run_workflow, run_workflow_local  # noqa: F401

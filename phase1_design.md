@@ -87,10 +87,11 @@ src/settlement_agent/
     prompts/                      # prompt registry (YAML-backed)
     memory/                       # session + case-memory interfaces
   application/                    # use-case services
-    chat_service/                 # ADK root + sub-agent enclosure
+    agents/                       # ADK root + sub-agent engine
       root_agent.py
-      workflow.py                 # thin entry point
       sub_agents/{intake,evidence,diagnosis,commentary,policy_hitl}_agent.py
+    chat_service/                 # chat-turn entry point only
+      workflow.py
     evaluation_service/eval_runner.py
     reset_memory_service/reset.py
     ingest_documents_service/     # Phase 2 RAG ingest placeholder
@@ -242,7 +243,11 @@ LLM-driven sub-agent eventually invoking it.
 
 ## 8. Agent topology
 
-The ADK-style enclosure lives under `application/chat_service/`:
+The ADK-style enclosure lives under `application/agents/`. It is
+deliberately kept **separate from `chat_service/`** so any caller — the
+chat-turn handler, a future REST endpoint, the eval runner, a CLI — can
+invoke the agentic engine directly without going through the chat
+surface.
 
 ```
 root_agent (SequentialAgent-style orchestrator)
@@ -432,8 +437,8 @@ without restructuring.
 
 | Hook | Where | Phase 2 use |
 |---|---|---|
-| `build_adk_agent()` on every sub-agent | `application/chat_service/sub_agents/*` | swap deterministic `run()` for a real `LlmAgent` |
-| `build_root_agent()` | `application/chat_service/root_agent.py` | returns a `SequentialAgent(sub_agents=[...])` once factories return real `LlmAgent`s |
+| `build_adk_agent()` on every sub-agent | `application/agents/sub_agents/*` | swap deterministic `run()` for a real `LlmAgent` |
+| `build_root_agent()` | `application/agents/root_agent.py` | returns a `SequentialAgent(sub_agents=[...])` once factories return real `LlmAgent`s |
 | `ToolCallResult` envelope | `domain/models.py` | identical shape an MCP tool returns |
 | `domain/tools/registry.py` | name-based tool lookup | mirrors how MCP `Toolset` resolves tools |
 | `domain/memory/case_memory.py::CaseMemory` Protocol | interface only | impl lands in `infrastructure/` later (KV → pgvector) |

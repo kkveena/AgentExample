@@ -58,9 +58,11 @@ src/settlement_agent/
     prompts/      # prompt registry
     memory/       # session + case memory interfaces
   application/
-    chat_service/             # ADK root + sub-agent enclosure
-      root_agent.py workflow.py
+    agents/                   # ADK root + sub-agent engine
+      root_agent.py
       sub_agents/{intake,evidence,diagnosis,commentary,policy_hitl}_agent.py
+    chat_service/             # chat-turn entry point only
+      workflow.py
     evaluation_service/eval_runner.py
     reset_memory_service/reset.py
     ingest_documents_service/  # Phase 2 RAG ingest placeholder
